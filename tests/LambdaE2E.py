@@ -21,20 +21,20 @@ def lambda_handler(event, context):
             ),
         )
         print(vars(response))
-    response = requests.post(
-        "http://" + host + "/chat",
-        data=json.dumps(
-            {
-                "event": {
-                    "unique_ids": [
-                        "apple/www.apple.com_2024-08-27-22-43-46.pdf"
-                    ],
-                    "question": "Find any photos that include any instances of apple logo",
-                }
-            }
-        ),
-    )
-    print(vars(response))
+    # response = requests.post(
+    #     "http://" + host + "/chat",
+    #     data=json.dumps(
+    #         {
+    #             "event": {
+    #                 "unique_ids": [
+    #                     "apple/www.apple.com_2024-08-27-22-43-46.pdf"
+    #                 ],
+    #                 "question": "Find any photos that include any instances of apple logo",
+    #             }
+    #         }
+    #     ),
+    # )
+    # print(vars(response))
     if delete:
         response = requests.delete(
             "http://" + host + "/pdf_file",

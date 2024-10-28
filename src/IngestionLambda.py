@@ -92,7 +92,7 @@ def process_file(
 
 def main(event, *args, **kwargs):
     metadata_llm = ChatLLM().llm
-    os_embeddings = Embeddings().embedding
+    os_embeddings = Embeddings()
     os_client = get_opensearch_connection(OS_HOST, OS_PORT)
 
     # create index if it does not exist
