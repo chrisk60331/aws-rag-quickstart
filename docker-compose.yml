@@ -19,8 +19,6 @@ services:
       - OLLAMA_HOST=0.0.0.0:11435
     ports:
       - "11435:11435"
-    networks:
-      - opensearch-net
     volumes:
       - ~/ollama:/root/.ollama
     networks:
