@@ -1,0 +1,83 @@
+version: "3"
+services:
+  ollama-model:
+    image: ollamallm:latest
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=http://ollama-serve:11435
+      - OLLAMA_DEBUG=1
+    depends_on:
+      ollama-serve:
+        condition: service_started
+    networks:
+      - opensearch-net
+    command: ollama pull llama3.2
+  ollama-serve:
+    image: ollamallm:latest
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11435
+    ports:
+      - "11435:11435"
+    networks:
+      - opensearch-net
+    volumes:
+      - ~/ollama:/root/.ollama
+    networks:
+      - opensearch-net
+    stdin_open: true  # Equivalent to -it
+    tty: true
+  uvicorn_app:
+    image: ecsopensearch:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    env_file:
+      - .env
+    networks:
+      - opensearch-net
+    stdin_open: true  # Equivalent to -it
+    tty: true
+  opensearch-node:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms1024m -Xmx1024m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+      - "discovery.type=single-node"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    ports:
+      - 9200:9200
+      - 9600:9600 # required for Performance Analyzer
+    networks:
+      - opensearch-net
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601
+    expose:
+      - "5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    networks:
+      - opensearch-net
+
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net:
+    driver: bridge
