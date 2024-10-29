@@ -93,7 +93,8 @@ def main(event, *args, **kwargs):
     You have access to the following tools:
 
     {tools}
-
+    
+    DO NOT FORGET TO PUT Final Answer: at the start of your final answer
     Use the following template with json formatted outputs:
 
     Question: the input question you must answer
@@ -102,6 +103,7 @@ def main(event, *args, **kwargs):
     Action Input: the input to the action
     Observation: the result of the action
     ... (this Thought/Action/Action Input/Observation can repeat N times)
+    Action: format response
     Final Answer: the final answer to the original input question
 
     Begin!

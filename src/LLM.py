@@ -9,7 +9,7 @@ from langchain_ollama import ChatOllama
 from src.constants import INGEST_LLM_MODEL, TEMPERATURE, REGION_NAME
 
 
-CHAT_MODEL = "llama3.2:latest"
+CHAT_MODEL = "zephyr"
 EMBED_MODEL = 'mxbai-embed-large:latest'
 IS_LOCAL = bool(int(os.getenv("LOCAL", "0")))
 
@@ -18,6 +18,7 @@ class ChatLLM:
     def __init__(self):
         self.prompt = None
         if IS_LOCAL:
+            ollama.pull(CHAT_MODEL)
             self.llm = ChatOllama(
                 model=CHAT_MODEL,
                 temperature=TEMPERATURE,
