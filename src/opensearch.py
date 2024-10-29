@@ -92,27 +92,8 @@ def insert_document_opensearch(client, index_name, embeddings, document):
     :param embeddings: embedding function
     :return: The result of the query
     """
-    base_doc = {
-        'unique_id': 'apple/www.apple.com_2024-08-27-22-43-46.pdf',
-        'file_path': 'apple/www.apple.com_2024-08-27-22-43-46.pdf',
-        'llm_generated': json.dumps({
-            "document_title": "Apple",
-            "capture_url": "https://www.apple.com/?afid=p238%7CseiEs44dj-dc_mtid_1870765e38482_pcrid_70336718460 3_pgnid_1394596488 7_pntwk_g_pchan__pexid__plid_kwd-10778630_&cid=aos-us-kwgo-brand-apple-slid=-product-",
-            "page_loaded_at": "Tue, 27 Aug 2024 22:43:40 GMT",
-            "capture_timestamp": "Tue, 27 Aug 2024 22:44:24 GMT",
-            "capture_tool": "10.49.0",
-            "collection_server_ip": "54.145.42.72",
-            "browser_engine": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "operating_system": "Linux (Node 20.11.1)",
-            "pdf_length": 6,
-            "capture_id": "5ZyEhUTwHtUlgZpvE1GBsK",
-            "user": "pv-sarah",
-            "pdf_reference": "fQsMd3UNXzittNThQifguR",
-        }),
-        'page_number': 'page_1',
-        'embedding': embeddings.embed_query(document["llm_generated"])['embedding']
-    }
-    response = client.index(index=index_name, body=base_doc, refresh=True)
+    document["embedding"] = embeddings.embed_query(document["llm_generated"])
+    response = client.index(index=index_name, body=document, refresh=True)
     return response
 
 

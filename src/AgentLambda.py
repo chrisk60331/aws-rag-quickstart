@@ -6,15 +6,13 @@ import re
 from botocore.config import Config
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.prompts import PromptTemplate
-from langchain_aws import BedrockEmbeddings
 from langchain_core.tools import tool
 
-from src.LLM import ChatLLM
+from src.LLM import ChatLLM, Embeddings
 from src.constants import (
     OS_HOST,
     OS_INDEX_NAME,
     OS_PORT,
-    REGION_NAME,
 )
 from src.opensearch import get_opensearch_connection, list_docs_by_id
 
@@ -35,15 +33,13 @@ def os_similarity_search(query_dict: str):
 
 
     """
-    query_dict = re.sub(r"(?<=[a-zA-Z])'(?=[a-zA-Z])", "", query_dict)
+    # query_dict = re.sub(r"(?<=[a-zA-Z])'(?=[a-zA-Z])", "", query_dict)
+    query_dict = query_dict.replace("'", '"')
+    print(query_dict)
     query_dict = json.loads(query_dict)
     query = query_dict["query"]
     unique_ids = query_dict["unique_ids"]
-    embeddings = BedrockEmbeddings(
-        region_name=REGION_NAME,
-        endpoint_url=os.environ["BEDROCK_ENDPOINT"],
-        config=client_config,
-    )
+    embeddings = Embeddings()
     query_embedding = embeddings.embed_query(query)
     should_queries = [{"term": {"unique_id": uid}} for uid in unique_ids]
 
@@ -98,7 +94,7 @@ def main(event, *args, **kwargs):
 
     {tools}
 
-    Use the following format:
+    Use the following template with json formatted outputs:
 
     Question: the input question you must answer
     Thought: you should always think about what to do
@@ -106,13 +102,12 @@ def main(event, *args, **kwargs):
     Action Input: the input to the action
     Observation: the result of the action
     ... (this Thought/Action/Action Input/Observation can repeat N times)
-    Thought: I now know the final answer
     Final Answer: the final answer to the original input question
 
     Begin!
 
     Question: {input}
-    Thought:{agent_scratchpad}
+    Thought: {agent_scratchpad}
     """
     prompt = PromptTemplate.from_template(template)
     agent = create_react_agent(llm, tools, prompt)
