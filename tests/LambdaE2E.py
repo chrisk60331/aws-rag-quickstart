@@ -1,5 +1,6 @@
 import json
 import os
+from json import JSONDecodeError
 
 import requests
 
@@ -12,7 +13,9 @@ def lambda_handler(event, context):
         data=json.dumps(
             {
                 "event": {
-                    "unique_ids": ["apple/www.apple.com_2024-08-27-22-43-46.pdf"]
+                    "unique_ids": [
+                        "apple/www.apple.com_2024-08-27-22-43-46.pdf"
+                    ]
                 }
             }
         ),
@@ -20,7 +23,7 @@ def lambda_handler(event, context):
     docs = []
     try:
         docs = json.loads(response.content.decode()).get("docs_list")
-    except:
+    except JSONDecodeError:
         pass
     if not docs:
         response = requests.put(

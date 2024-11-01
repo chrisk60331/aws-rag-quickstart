@@ -8,12 +8,8 @@ import dotenv
 from langchain.schema import HumanMessage
 from pdf2image import convert_from_bytes
 
-from src.LLM import Embeddings, ChatLLM
-from src.constants import (
-    OS_HOST,
-    OS_INDEX_NAME,
-    OS_PORT,
-)
+from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
+from src.LLM import ChatLLM, Embeddings
 from src.opensearch import (
     create_index_opensearch,
     get_opensearch_connection,

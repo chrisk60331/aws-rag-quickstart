@@ -2,17 +2,13 @@ import logging
 import os
 
 from botocore.config import Config
-from langchain_core.tools import tool
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
+from langchain_core.tools import tool
 
+from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
 from src.LLM import ChatLLM, Embeddings
-from src.constants import (
-    OS_HOST,
-    OS_INDEX_NAME,
-    OS_PORT,
-)
 from src.opensearch import get_opensearch_connection, list_docs_by_id
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
@@ -31,7 +27,7 @@ def os_similarity_search(context):
         dict: The results of the search query.
 
     """
-    unique_ids, question = context['unique_ids'], context['question']
+    unique_ids, question = context["unique_ids"], context["question"]
     embeddings = Embeddings()
     query_embedding = embeddings.embed_query(question)
     should_queries = [{"term": {"unique_id": uid}} for uid in unique_ids]
@@ -84,14 +80,11 @@ def main(event, *args, **kwargs):
     llm = ChatLLM().llm
     prompt = hub.pull("rlm/rag-prompt")
     rag_chain = (
-            {"context": os_similarity_search, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-            | StrOutputParser()
+        {"context": os_similarity_search, "question": RunnablePassthrough()}
+        | prompt
+        | llm
+        | StrOutputParser()
     )
-    event = {
-        "context": event,
-        "question": event['question']
-    }
+    event = {"context": event, "question": event["question"]}
 
     return rag_chain.invoke(input=event)

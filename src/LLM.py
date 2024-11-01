@@ -1,7 +1,7 @@
 import os
 
 import ollama
-from langchain_aws import ChatBedrock, BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings, ChatBedrock
 from langchain_ollama import ChatOllama
 
 IS_LOCAL = bool(int(os.getenv("LOCAL", "0")))
@@ -13,7 +13,6 @@ REGION_NAME = os.getenv("AWS_REGION")
 
 
 class LLM:
-
     @property
     def is_local_llm(self):
         return bool(int(os.getenv("LOCAL", "0")))
@@ -46,9 +45,8 @@ class Embeddings(LLM):
         self.prompt = prompt
         if self.is_local_llm:
             return ollama.embeddings(
-                model=OLLAMA_EMBED_MODEL,
-                prompt=self.prompt
-            ).get('embedding')
+                model=OLLAMA_EMBED_MODEL, prompt=self.prompt
+            ).get("embedding")
         else:
             print("using bedrock")
             return BedrockEmbeddings(
