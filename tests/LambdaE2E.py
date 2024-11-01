@@ -6,9 +6,23 @@ import requests
 
 def lambda_handler(event, context):
     host = os.environ["ECS_HOST_IP"]
-    create = int(os.environ["CREATE"])
     delete = int(os.environ["DELETE"])  # boolean
-    if create:
+    response = requests.post(
+        "http://" + host + "/pdf_file",
+        data=json.dumps(
+            {
+                "event": {
+                    "unique_ids": ["apple/www.apple.com_2024-08-27-22-43-46.pdf"]
+                }
+            }
+        ),
+    )
+    docs = []
+    try:
+        docs = json.loads(response.content.decode()).get("docs_list")
+    except:
+        pass
+    if not docs:
         response = requests.put(
             "http://" + host + "/pdf_file",
             data=json.dumps(
@@ -29,7 +43,7 @@ def lambda_handler(event, context):
                     "unique_ids": [
                         "apple/www.apple.com_2024-08-27-22-43-46.pdf"
                     ],
-                    "question": "Find any photos that include any instances of apple logo",
+                    "question": "Find all instances of apple logo in the docs",
                 }
             }
         ),

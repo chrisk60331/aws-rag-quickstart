@@ -1,4 +1,5 @@
 import json
+import os
 from unittest import mock
 from unittest.mock import Mock, patch
 
@@ -11,6 +12,7 @@ with patch(
         "LOG_LEVEL": "DEBUG",
         "AOSS_URL": "here",
         "AOSS_PORT": "42",
+        "LOCAL": "1"
     },
 ):
     from src.AgentLambda import main as agent_main
@@ -21,6 +23,7 @@ with patch(
         create_index_opensearch,
         insert_document_opensearch,
     )
+    from src.LLM import ChatLLM, Embeddings
     from src.IngestionLambda import main as ingest_main
     from src.IngestionLambda import process_file
     from src.opensearch import (
@@ -73,15 +76,71 @@ def test_get_all_indexed_files_opensearch():
 
 @pytest.mark.parametrize("input_file", ["foo", "bar"])
 def test_agent_main(input_file):
-    with mock.patch("src.opensearch.get_opensearch_connection"), mock.patch(
-        "src.AgentLambda.AgentExecutor"
-    ), patch("os.environ", {"BEDROCK_ENDPOINT": "https://foo"}), patch(
-        "src.AgentLambda.create_react_agent"
+    with mock.patch(
+       "src.AgentLambda.RunnablePassthrough"
     ), mock.patch(
+        "src.LLM.ollama.pull"
+    ), mock.patch(
+       "src.AgentLambda.StrOutputParser"
+    ), mock.patch(
+        "src.AgentLambda.os_similarity_search",
+    ), mock.patch(
+        "src.LLM.ChatOllama"
+    ), mock.patch(
+        "src.LLM.ollama.embeddings",
+        return_value=Mock(embed_query=Mock(return_value={}))
+    ),  mock.patch(
+        "src.IngestionLambda.get_opensearch_connection"
+    ), mock.patch(
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1"
+        }
+    ), patch(
         "src.AgentLambda.list_docs_by_id",
     ) as mock_os:
         mock_os.return_value = {"num_pages": 9}
-        agent_main({"question": "bar", "unique_id": input_file})
+        agent_main({"question": "bar", "unique_ids": [input_file]})
+
+
+def test_llm_chat():
+    with mock.patch(
+        "src.LLM.ollama.pull"
+    ), mock.patch(
+        "src.LLM.ChatOllama"
+    ), mock.patch(
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1"
+        }
+    ):
+        ChatLLM()
+
+
+@pytest.mark.parametrize(
+    "is_local", ["1", "0"]
+)
+def test_llm_is_local(is_local):
+    with mock.patch(
+        "src.LLM.ollama.pull"
+    ), mock.patch(
+        "src.LLM.ChatOllama"
+    ), mock.patch(
+        "src.LLM.BedrockEmbeddings"
+    ), mock.patch(
+        "src.LLM.ChatBedrock"
+    ), mock.patch(
+        "src.LLM.ollama.embeddings"
+    ), mock.patch(
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": is_local,
+        }
+    ):
+        actual = Embeddings()
+        print(actual)
+        actual.embed_query("foo")
+        ChatLLM()
 
 
 @pytest.mark.parametrize(
@@ -105,13 +164,17 @@ def test_ingest_main(input_file, exists):
             return_value=Mock(indices=Mock(exists=Mock(return_value=exists)))
         ),
     ), mock.patch(
-        "src.IngestionLambda.ChatBedrock"
+        "src.LLM.ChatOllama"
     ), patch(
-        "os.environ", {"BEDROCK_ENDPOINT": "https://foo"}
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1"
+        }
     ), mock.patch(
-        "src.IngestionLambda.BedrockEmbeddings"
-    ) as mock_os:
-        mock_os.return_value = [{"key": {"ids": "foo"}}]
+        "src.LLM.ollama.embeddings"
+    ), mock.patch(
+        "src.LLM.ollama.pull"
+    ):
         ingest_main({"question": "bar", "file_path": input_file})
 
 
@@ -207,16 +270,18 @@ def test_delete_documents_no_match(mocker):
 
 
 def test_os_similarity_search_success(mocker):
-    input_query = json.dumps(
-        {"query": "find documents", "unique_ids": ["document.pdf"]}
-    )
+    input_query = {
+        "context": {
+            "question": "find documents", "unique_ids": ["document.pdf"]
+        }
+    }
 
     expected_query_dict = {
         "query": "find documents",
         "pdf_file": "document.pdf",
     }
 
-    mock_embeddings = mocker.patch("src.AgentLambda.BedrockEmbeddings")
+    mock_embeddings = mocker.patch("src.LLM.BedrockEmbeddings")
     mock_embeddings_instance = mock_embeddings.return_value
     mock_embeddings_instance.embed_query.return_value = [0.1, 0.2, 0.3]
 
@@ -238,14 +303,18 @@ def test_os_similarity_search_success(mocker):
 
 
 def test_os_similarity_search_invalid_json(mocker):
-    input_query = json.dumps(
-        {"query": "find documents", "unique_ids": ["document.pdf"]}
-    )
+    input_query = {"context": {"question": "find documents", "unique_ids": ["document.pdf"]}}
     mocker.patch("builtins.print")
-    with patch("os.environ", {"BEDROCK_ENDPOINT": "https://foo"}), patch(
+    with patch(
+        "os.environ", {"BEDROCK_ENDPOINT": "https://foo"}
+    ), patch(
         "boto3.session"
-    ), mock.patch("src.AgentLambda.get_opensearch_connection"), mock.patch(
-        "src.AgentLambda.BedrockEmbeddings"
+    ), mock.patch(
+        "src.AgentLambda.get_opensearch_connection"
+    ), mock.patch(
+        "src.LLM.BedrockEmbeddings"
+    ), mock.patch(
+        "src.LLM.ChatBedrock"
     ):
         result = os_similarity_search.invoke(input_query)
     assert result

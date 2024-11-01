@@ -1,29 +1,33 @@
 import os
-from typing import Any
 
 import ollama
 from langchain_aws import ChatBedrock, BedrockEmbeddings
-from langchain_core.runnables import Runnable, RunnableBinding
 from langchain_ollama import ChatOllama
 
-from src.constants import INGEST_LLM_MODEL, TEMPERATURE, REGION_NAME
-
-
-CHAT_MODEL = "zephyr"
-EMBED_MODEL = 'mxbai-embed-large:latest'
 IS_LOCAL = bool(int(os.getenv("LOCAL", "0")))
+OLLAMA_CHAT_MODEL = os.getenv("OLLAMA_CHAT_MODEL")
+OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL")
+INGEST_LLM_MODEL = os.getenv("LLM_MODEL")
+TEMPERATURE = os.getenv("MODEL_TEMP")
+REGION_NAME = os.getenv("AWS_REGION")
 
 
-class ChatLLM:
+class LLM:
+
+    @property
+    def is_local_llm(self):
+        return bool(int(os.getenv("LOCAL", "0")))
+
+
+class ChatLLM(LLM):
     def __init__(self):
-        self.prompt = None
-        if IS_LOCAL:
-            ollama.pull(CHAT_MODEL)
+        if self.is_local_llm:
+            ollama.pull(OLLAMA_CHAT_MODEL)
             self.llm = ChatOllama(
-                model=CHAT_MODEL,
+                model=OLLAMA_CHAT_MODEL,
                 temperature=TEMPERATURE,
-                num_ctx=4096,
-                format="json",
+                num_predict=4096,
+                seed=42,
             )
         else:
             self.llm = ChatBedrock(
@@ -34,16 +38,15 @@ class ChatLLM:
             )
 
 
-class Embeddings:
+class Embeddings(LLM):
     def __init__(self):
         self.prompt = None
 
     def embed_query(self, prompt):
         self.prompt = prompt
-        if IS_LOCAL:
-            print("using ollama")
+        if self.is_local_llm:
             return ollama.embeddings(
-                model=EMBED_MODEL,
+                model=OLLAMA_EMBED_MODEL,
                 prompt=self.prompt
             ).get('embedding')
         else:

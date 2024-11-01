@@ -1,12 +1,11 @@
-import json
 import logging
 import os
-import re
 
 from botocore.config import Config
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain.prompts import PromptTemplate
 from langchain_core.tools import tool
+from langchain import hub
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
 
 from src.LLM import ChatLLM, Embeddings
 from src.constants import (
@@ -21,26 +20,20 @@ client_config = Config(max_pool_connections=50)
 
 
 @tool
-def os_similarity_search(query_dict: str):
+def os_similarity_search(context):
     """
     Perform a similarity search on OpenSearch.
 
     Args:
-        query_dict (str): Dict containing query and unique_ids
+        context
 
     Returns:
         dict: The results of the search query.
 
-
     """
-    # query_dict = re.sub(r"(?<=[a-zA-Z])'(?=[a-zA-Z])", "", query_dict)
-    query_dict = query_dict.replace("'", '"')
-    print(query_dict)
-    query_dict = json.loads(query_dict)
-    query = query_dict["query"]
-    unique_ids = query_dict["unique_ids"]
+    unique_ids, question = context['unique_ids'], context['question']
     embeddings = Embeddings()
-    query_embedding = embeddings.embed_query(query)
+    query_embedding = embeddings.embed_query(question)
     should_queries = [{"term": {"unique_id": uid}} for uid in unique_ids]
 
     query_body = {
@@ -79,62 +72,26 @@ def summarize_documents(event, *args, **kwargs):
 
 
 def main(event, *args, **kwargs):
-    llm = ChatLLM().llm
-
-    tools = [os_similarity_search]
-
-    template = """
-    You are a legal assistant designed for doc review.
-    You have access to vectorized indexed information on document pages
-     related to the given pdf file.
-    Return relevant information for the user and do not make anything up.
-    Make sure you include the source of the information by always
-     providing the page source file.
-    You have access to the following tools:
-
-    {tools}
-    
-    DO NOT FORGET TO PUT Final Answer: at the start of your final answer
-    Use the following template with json formatted outputs:
-
-    Question: the input question you must answer
-    Thought: you should always think about what to do
-    Action: the action to take, should be one of [{tool_names}]
-    Action Input: the input to the action
-    Observation: the result of the action
-    ... (this Thought/Action/Action Input/Observation can repeat N times)
-    Action: format response
-    Final Answer: the final answer to the original input question
-
-    Begin!
-
-    Question: {input}
-    Thought: {agent_scratchpad}
-    """
-    prompt = PromptTemplate.from_template(template)
-    agent = create_react_agent(llm, tools, prompt)
-
-    agent_executor = AgentExecutor(
-        agent=agent,
-        tools=tools,
-        verbose=True,
-        handle_parsing_errors=True,
-        return_intermediate_steps=True,
-        stream=False,
-    )
     currently_indexed_ids_dict = list_docs_by_id(event.get("unique_ids"))
+
+    if not currently_indexed_ids_dict.get("num_pages"):
+        return f"There is no data for unique ids {event.get('unique_ids')} in OpenSearch"
 
     logging.info(
         f"Currently indexed unique ids are {currently_indexed_ids_dict}"
     )
 
-    if not currently_indexed_ids_dict.get("num_pages"):
-        logging.error(
-            f"There is no data for unique ids {event.get('unique_ids')} in OpenSearch"
-        )
-        return f"There is no data for unique ids {event.get('unique_ids')} in OpenSearch"
+    llm = ChatLLM().llm
+    prompt = hub.pull("rlm/rag-prompt")
+    rag_chain = (
+            {"context": os_similarity_search, "question": RunnablePassthrough()}
+            | prompt
+            | llm
+            | StrOutputParser()
+    )
+    event = {
+        "context": event,
+        "question": event['question']
+    }
 
-    response = agent_executor.invoke({"input": event})
-    logging.info(f"Response: {response.get('output')}")
-
-    return response.get("output")
+    return rag_chain.invoke(input=event)
