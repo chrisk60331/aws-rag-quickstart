@@ -39,28 +39,28 @@ resource "aws_ecs_service" "aws_application" {
   cluster         = aws_ecs_cluster.aws_application.id
   task_definition = aws_ecs_task_definition.aws_application.arn
   desired_count   = var.desired_instance_count
-  launch_type = "FARGATE"
+  launch_type     = "FARGATE"
   network_configuration {
-    security_groups = [var.security_group_id]
-    subnets = var.subnets
+    security_groups  = [var.security_group_id]
+    subnets          = var.subnets
     assign_public_ip = false
   }
 }
 
 resource "aws_ecs_task_definition" "aws_application" {
   family                   = "${var.app_name}-task"
-  network_mode              = "awsvpc"
-  cpu                       = 4096
-  memory                    = 16384
+  network_mode             = "awsvpc"
+  cpu                      = 4096
+  memory                   = 16384
   requires_compatibilities = ["FARGATE"]
-  execution_role_arn        = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn             = aws_iam_role.ecs_task_execution_role.arn
-  container_definitions    = jsonencode([
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+  container_definitions = jsonencode([
     {
       name              = var.app_name,
       image             = var.docker_image_url,
-      cpu                       = 4096,
-      memory                    = 16384,
+      cpu               = 4096,
+      memory            = 16384,
       memoryReservation = 12000,
       essential         = true,
       portMappings = [

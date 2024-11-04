@@ -20,10 +20,10 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_subnet" "public" {
-  for_each = var.availability_zones
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 2, each.key)
-  availability_zone = each.value
+  for_each                = var.availability_zones
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 2, each.key)
+  availability_zone       = each.value
   map_public_ip_on_launch = true
 }
 
@@ -36,10 +36,10 @@ resource "aws_security_group" "main" {
 resource "aws_vpc_security_group_ingress_rule" "tcp-internal" {
   security_group_id = aws_security_group.main.id
 
-  referenced_security_group_id  = aws_security_group.main.id
-  from_port   = 0
-  ip_protocol = "tcp"
-  to_port     = 65535
+  referenced_security_group_id = aws_security_group.main.id
+  from_port                    = 0
+  ip_protocol                  = "tcp"
+  to_port                      = 65535
 }
 
 resource "aws_vpc_security_group_ingress_rule" "tcp-inbound" {
@@ -53,10 +53,10 @@ resource "aws_vpc_security_group_ingress_rule" "tcp-inbound" {
 
 resource "aws_vpc_security_group_egress_rule" "tcp" {
   security_group_id = aws_security_group.main.id
-  cidr_ipv4   = "0.0.0.0/0"
-  from_port   = 0
-  ip_protocol = "tcp"
-  to_port     = 65535
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 0
+  ip_protocol       = "tcp"
+  to_port           = 65535
 }
 
 resource "aws_vpc_endpoint" "bedrock" {
@@ -68,7 +68,7 @@ resource "aws_vpc_endpoint" "bedrock" {
     aws_security_group.main.id,
   ]
 
-  subnet_ids = [for s in aws_subnet.main : s.id]
+  subnet_ids          = [for s in aws_subnet.main : s.id]
   private_dns_enabled = true
 }
 
@@ -81,7 +81,7 @@ resource "aws_vpc_endpoint" "dkr" {
     aws_security_group.main.id,
   ]
 
-  subnet_ids = [for s in aws_subnet.main : s.id]
+  subnet_ids          = [for s in aws_subnet.main : s.id]
   private_dns_enabled = true
 }
 
@@ -94,7 +94,7 @@ resource "aws_vpc_endpoint" "logs" {
     aws_security_group.main.id,
   ]
 
-  subnet_ids = [for s in aws_subnet.main : s.id]
+  subnet_ids          = [for s in aws_subnet.main : s.id]
   private_dns_enabled = true
 }
 
@@ -107,7 +107,7 @@ resource "aws_vpc_endpoint" "ecr" {
     aws_security_group.main.id,
   ]
 
-  subnet_ids = [for s in aws_subnet.main : s.id]
+  subnet_ids          = [for s in aws_subnet.main : s.id]
   private_dns_enabled = true
 }
 
@@ -120,7 +120,7 @@ resource "aws_vpc_endpoint" "monitoring" {
     aws_security_group.main.id,
   ]
 
-  subnet_ids = [for s in aws_subnet.main : s.id]
+  subnet_ids          = [for s in aws_subnet.main : s.id]
   private_dns_enabled = true
 }
 
@@ -133,7 +133,7 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_eip" "nat" {
-  domain   = "vpc"
+  domain = "vpc"
 }
 
 resource "aws_nat_gateway" "nat" {
@@ -151,7 +151,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "public" {
-  for_each = aws_subnet.public
+  for_each       = aws_subnet.public
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
 }
@@ -160,13 +160,13 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
 
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.nat.id
   }
 }
 
 resource "aws_route_table_association" "private" {
-  for_each = aws_subnet.main
+  for_each       = aws_subnet.main
   subnet_id      = each.value.id
   route_table_id = aws_route_table.private.id
 }

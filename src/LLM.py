@@ -44,9 +44,9 @@ class Embeddings(LLM):
     def embed_query(self, prompt):
         self.prompt = prompt
         if self.is_local_llm:
-            return ollama.embeddings(
-                model=CHAT_LLM, prompt=self.prompt
-            ).get("embedding")
+            return ollama.embeddings(model=CHAT_LLM, prompt=self.prompt).get(
+                "embedding"
+            )
         else:
             print("using bedrock")
             return BedrockEmbeddings(

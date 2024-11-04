@@ -29,26 +29,26 @@ variable "docker_image_url" {
 }
 
 variable "desired_instance_count" {
-  type        = number
+  type = number
 }
 
 variable "opensearch_url" {
-  type        = string
+  type = string
 }
 
 variable "opensearch_port" {
-  type        = string
+  type = string
 }
 
 variable "opensearch_index" {
-  type        = string
+  type = string
 }
 
 variable "bedrock_endpoint" {
-  type        = string
+  type = string
 }
 variable "s3_bucket" {
-  type        = string
+  type = string
 }
 variable "env_variables" {
   type = list(map(string))

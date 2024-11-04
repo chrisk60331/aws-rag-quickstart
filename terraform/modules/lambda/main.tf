@@ -43,13 +43,13 @@ resource "aws_lambda_function" "lambda_function" {
     variables = var.env_vars
   }
   package_type = "Image"
-  image_uri   = var.image_uri
-  memory_size = 2048
-  timeout     = 45
+  image_uri    = var.image_uri
+  memory_size  = 2048
+  timeout      = 45
 
   vpc_config {
     security_group_ids = var.security_group_ids
-    subnet_ids = var.subnet_ids
+    subnet_ids         = var.subnet_ids
   }
 }
 

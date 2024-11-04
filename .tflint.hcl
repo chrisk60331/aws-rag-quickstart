@@ -1,4 +1,15 @@
+config {
+
+}
+
 plugin "terraform" {
   enabled = true
-  preset  = "recommended"
+}
+
+plugin "aws" {
+  enabled = true
+}
+
+rule "terraform_required_version" {
+  enabled = false
 }

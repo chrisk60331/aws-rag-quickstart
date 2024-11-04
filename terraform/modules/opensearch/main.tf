@@ -1,10 +1,10 @@
 resource "aws_opensearch_domain" "opensearch-domain" {
-  domain_name           = "domain-${var.app_name}"
-  engine_version        = var.engine_version  # Change to your desired version
+  domain_name    = "domain-${var.app_name}"
+  engine_version = var.engine_version # Change to your desired version
 
   cluster_config {
-    instance_type        = var.instance_type
-    instance_count       = var.instance_count
+    instance_type            = var.instance_type
+    instance_count           = var.instance_count
     dedicated_master_enabled = false
     zone_awareness_enabled   = false
   }
@@ -20,7 +20,7 @@ resource "aws_opensearch_domain" "opensearch-domain" {
   }
 
   vpc_options {
-    subnet_ids = [var.subnet_ids[0]]
+    subnet_ids         = [var.subnet_ids[0]]
     security_group_ids = var.security_group_ids
   }
 

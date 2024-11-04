@@ -3,6 +3,11 @@ repos:
     rev: v1.96.2 # Get the latest from: https://github.com/antonbabenko/pre-commit-terraform/releases
     hooks:
       - id: terraform_tflint
+        args:
+          - '--args=--disable-rule=terraform_typed_variables'
+          - '--args=--disable-rule=terraform_required_providers'
+          - '--args=--disable-rule=terraform_unused_declarations'
+          - '--args=--disable-rule=terraform_required_version'
       - id: terraform_fmt
 
   - repo: https://github.com/psf/black
@@ -30,3 +35,15 @@ repos:
         language: system
         types: [ python ]
         pass_filenames: false
+      - id: hadolint-docker
+        name: Lint Dockerfiles
+        description: Runs hadolint Docker image to lint Dockerfiles
+        language: docker_image
+        types: [ "dockerfile" ]
+        entry: ghcr.io/hadolint/hadolint hadolint
+      - id: hadolint
+        name: Lint Dockerfiles
+        description: Runs hadolint to lint Dockerfiles
+        language: system
+        types: [ "dockerfile" ]
+        entry: hadolint

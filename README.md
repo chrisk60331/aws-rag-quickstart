@@ -23,19 +23,25 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 ```
 [TFLint](https://github.com/terraform-linters/tflint) required for terraform_tflint hook
+[Hadolint](https://github.com/hadolint/hadolint) required for hadolint hook
+
 ### To run unit tests
 ```bash
 PYTHONPATH=. python -m pytest tests/unit_tests.py
 ```
 ### Run coverage
 ```bash
-coverage erase && coverage run -m pytest tests/unit_tests.py && coverage report --show-missing
+coverage erase && \
+coverage run -m pytest tests/unit_tests.py && \
+coverage report --show-missing
 ```
 ### Linting
 ```bash
 black -l79 src tests
 isort -l79 --profile black src tests
 pylama src tests
+tflint
+terraform_fmt
 ```
 ### Pre-commit
 ```bash
