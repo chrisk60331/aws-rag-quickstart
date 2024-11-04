@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "aws-raq-quickstart"
+version = "0.1.0"
+description = "Prototype for AWS RAG Quickstart"
+authors = ["Chris King <cking42976@gmail.com>"]
+readme = "README.md"
+
+[project]
+dynamic = ["dependencies"]
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
