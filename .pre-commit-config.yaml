@@ -16,6 +16,12 @@ repos:
       - id: black
         args: [--check, --diff, -l79]
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: ""
+    hooks:
+    -   id: mypy
+        args: ["--strict", "--ignore-missing-imports", "--config-file", "mypy.ini"]
+
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.10.1  # Use the latest stable version or pin to a specific version.
     hooks:

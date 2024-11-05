@@ -4,7 +4,7 @@ from requests_aws4auth import AWS4Auth
 from src.constants import REGION_NAME
 
 
-def get_aws_auth():
+def get_aws_auth() -> AWS4Auth:
     service = "es"  # must set the service as 'es'
     credentials = boto3.Session().get_credentials()
     awsauth = AWS4Auth(

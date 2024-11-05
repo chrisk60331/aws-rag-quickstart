@@ -2,10 +2,12 @@ import base64
 import logging
 import os
 from io import BytesIO
+from typing import Any, Dict
 
 import boto3
 import dotenv
 from langchain.schema import HumanMessage
+from opensearchpy import OpenSearch
 from pdf2image import convert_from_bytes
 
 from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
@@ -21,7 +23,9 @@ if int(os.getenv("LOCAL", "0")):
     dotenv.load_dotenv()
 
 
-def augment_metadata(llm, image_string, general_metadata):
+def augment_metadata(
+    llm: ChatLLM, image_string: bytes, general_metadata: Dict[str, Any]
+) -> Dict[str, Any]:
     message = HumanMessage(
         content=[
             {
@@ -45,8 +49,12 @@ def augment_metadata(llm, image_string, general_metadata):
 
 
 def process_file(
-    input_dict, metadata_llm, os_client, os_index_name, os_embeddings
-):
+    input_dict: Dict[str, Any],
+    metadata_llm: ChatLLM,
+    os_client: OpenSearch,
+    os_index_name: str,
+    os_embeddings: Any,
+) -> int:
     """
     Process a file using the metadata. ONLY SUPPORTS PDF FILES FOR NOW
     We will examine each page of the pdf and build up metadata for each page.
@@ -87,7 +95,7 @@ def process_file(
     return i
 
 
-def main(event, *args, **kwargs):
+def main(event: Dict[str, Any], *args: Any, **kwargs: Any) -> int:
     metadata_llm = ChatLLM().llm
     os_embeddings = Embeddings()
     os_client = get_opensearch_connection(OS_HOST, OS_PORT)

@@ -1,4 +1,6 @@
+import logging
 import os
+from typing import Any
 
 import ollama
 from langchain_aws import BedrockEmbeddings, ChatBedrock
@@ -10,16 +12,17 @@ INGEST_LLM = os.getenv("CHAT_MODEL")
 CHAT_LLM = os.getenv("CHAT_MODEL")
 TEMPERATURE = os.getenv("MODEL_TEMP")
 REGION_NAME = os.getenv("AWS_REGION")
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "WARN"))
 
 
 class LLM:
     @property
-    def is_local_llm(self):
+    def is_local_llm(self: Any) -> bool:
         return bool(int(os.getenv("LOCAL", "0")))
 
 
 class ChatLLM(LLM):
-    def __init__(self):
+    def __init__(self) -> None:
         if self.is_local_llm:
             ollama.pull(CHAT_LLM)
             self.llm = ChatOllama(
@@ -38,17 +41,17 @@ class ChatLLM(LLM):
 
 
 class Embeddings(LLM):
-    def __init__(self):
+    def __init__(self) -> None:
         self.prompt = None
 
-    def embed_query(self, prompt):
+    def embed_query(self, prompt: str) -> Any:
         self.prompt = prompt
         if self.is_local_llm:
             return ollama.embeddings(model=CHAT_LLM, prompt=self.prompt).get(
                 "embedding"
             )
         else:
-            print("using bedrock")
+            logging.info("using bedrock")
             return BedrockEmbeddings(
                 region_name=REGION_NAME,
                 endpoint_url=os.environ["BEDROCK_ENDPOINT"],

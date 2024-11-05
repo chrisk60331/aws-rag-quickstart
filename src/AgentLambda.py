@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any, Dict, List, Union
 
 from botocore.config import Config
 from langchain import hub
@@ -16,7 +17,7 @@ client_config = Config(max_pool_connections=50)
 
 
 @tool
-def os_similarity_search(context):
+def os_similarity_search(context: Dict[str, Any]) -> Any:
     """
     Perform a similarity search on OpenSearch.
 
@@ -54,7 +55,9 @@ def os_similarity_search(context):
     return response
 
 
-def summarize_documents(event, *args, **kwargs):
+def summarize_documents(
+    event: Dict[str, Union[str, List[str]]], *args: Any, **kwargs: Any
+) -> str:
     question = (
         "Describe each of these webpages from the website. What is happening "
         "on each page?"
@@ -67,7 +70,9 @@ def summarize_documents(event, *args, **kwargs):
     )
 
 
-def main(event, *args, **kwargs):
+def main(
+    event: Dict[str, Union[str, List[str]]], *args: Any, **kwargs: Any
+) -> str:
     currently_indexed_ids_dict = list_docs_by_id(event.get("unique_ids"))
 
     if not currently_indexed_ids_dict.get("num_pages"):

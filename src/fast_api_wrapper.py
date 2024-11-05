@@ -1,5 +1,5 @@
 import json
-from typing import Annotated, List
+from typing import Annotated, Any, Dict, List
 
 from fastapi import BackgroundTasks, Body, FastAPI, UploadFile
 from pydantic import BaseModel
@@ -42,27 +42,29 @@ class SummaryEvent(BaseModel):
 
 
 @app.post(CHAT_API)
-async def post(event: Annotated[ChatEvent, Body(embed=True)]):
+async def post(event: Annotated[ChatEvent, Body(embed=True)]) -> str:
     return main(event.model_dump())
 
 
 @app.delete(DOC_API)
-async def delete(event: Annotated[FileEvent, Body(embed=True)]):
+async def delete(event: Annotated[FileEvent, Body(embed=True)]) -> Any:
     return delete_doc(event.model_dump())
 
 
 @app.put(DOC_API)
-async def put(event: Annotated[FileEvent, Body(embed=True)]):
+async def put(event: Annotated[FileEvent, Body(embed=True)]) -> int:
     return vectorstore(event.model_dump())
 
 
 @app.post(DOC_API)
-async def get_docs(event: Annotated[ListDocsEvent, Body(embed=True)]):
+async def get_docs(
+    event: Annotated[ListDocsEvent, Body(embed=True)]
+) -> Dict[str, Any]:
     return list_docs_by_id(event.model_dump().get("unique_ids"))
 
 
 @app.get(SUMMARY_API)
-async def summarize(event: Annotated[SummaryEvent, Body(embed=True)]):
+async def summarize(event: Annotated[SummaryEvent, Body(embed=True)]) -> str:
     return summarize_documents(event.model_dump())
 
 
@@ -70,7 +72,7 @@ async def summarize(event: Annotated[SummaryEvent, Body(embed=True)]):
 async def bulk_put(
     event: Annotated[BulkEvent, Body(embed=True)],
     background_tasks: BackgroundTasks,
-):
+) -> Dict[str, Any]:
     event = event.model_dump()
     for file_id in event.get("file_paths"):
         this = FileEvent(file_path=file_id, unique_id=event.get("unique_id"))
@@ -82,7 +84,7 @@ async def bulk_put(
 async def bulk_delete(
     event: Annotated[BulkEvent, Body(embed=True)],
     background_tasks: BackgroundTasks,
-):
+) -> Dict[str, Any]:
     event = event.model_dump()
     for file_id in event.get("file_paths"):
         this = FileEvent(file_path=file_id, unique_id=event.get("unique_id"))
@@ -91,7 +93,9 @@ async def bulk_delete(
 
 
 @app.put(MANIFEST_API)
-async def put_manifest(file: UploadFile, background_tasks: BackgroundTasks):
+async def put_manifest(
+    file: UploadFile, background_tasks: BackgroundTasks
+) -> Dict[str, Any]:
     data = json.load(file.file)
     files = [row["name"] for row in data]
     for file_id in files:
@@ -101,7 +105,9 @@ async def put_manifest(file: UploadFile, background_tasks: BackgroundTasks):
 
 
 @app.delete(MANIFEST_API)
-async def delete_manifest(file: UploadFile, background_tasks: BackgroundTasks):
+async def delete_manifest(
+    file: UploadFile, background_tasks: BackgroundTasks
+) -> Dict[str, Any]:
     data = json.load(file.file)
     files = [row["name"] for row in data]
     for file_id in files:

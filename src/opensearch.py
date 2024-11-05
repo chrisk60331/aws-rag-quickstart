@@ -8,7 +8,7 @@ from src.AWSAuth import get_aws_auth
 from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
 
 
-def get_opensearch_connection(os_host, os_port):
+def get_opensearch_connection(os_host: str, os_port: str) -> OpenSearch:
     logging.info("getting OpenSearch connection")
     local = int(os.getenv("LOCAL", "0"))
     if local:
@@ -29,7 +29,7 @@ def get_opensearch_connection(os_host, os_port):
     )
 
 
-def is_opensearch_connected(client):
+def is_opensearch_connected(client: OpenSearch) -> bool:
     """
     Connectivity test
     """
@@ -39,7 +39,9 @@ def is_opensearch_connected(client):
         return False
 
 
-def create_index_opensearch(client, embeddings, index_name):
+def create_index_opensearch(
+    client: OpenSearch, embeddings: Any, index_name: str
+) -> Any:
     """
     Create Vector index .
 
@@ -82,7 +84,9 @@ def create_index_opensearch(client, embeddings, index_name):
     return response
 
 
-def insert_document_opensearch(client, index_name, embeddings, document):
+def insert_document_opensearch(
+    client: OpenSearch, index_name: str, embeddings: Any, document: Any
+) -> Any:
     """
     Add documents to an existing OpenSearch index.
 
@@ -97,7 +101,7 @@ def insert_document_opensearch(client, index_name, embeddings, document):
     return response
 
 
-def delete_doc(event, *args, **kwargs):
+def delete_doc(event: Dict[str, Any], *args: Any, **kwargs: Any) -> None:
     os_index_name = os.environ["INDEX_NAME"]
     os_host = os.environ["AOSS_URL"]
     os_port = os.environ["AOSS_PORT"]
@@ -107,7 +111,9 @@ def delete_doc(event, *args, **kwargs):
     delete_documents_opensearch(os_client, os_index_name, file_path)
 
 
-def delete_documents_opensearch(client, index_name, file_path):
+def delete_documents_opensearch(
+    client: OpenSearch, index_name: str, file_path: Any
+) -> Any:
     """
     Delete documents from the OpenSearch instance related to the specific file.
 
@@ -122,7 +128,7 @@ def delete_documents_opensearch(client, index_name, file_path):
     return response
 
 
-def get_all_indexed_files_opensearch(index_name) -> Dict[Any, Any]:
+def get_all_indexed_files_opensearch(index_name: str) -> Dict[str, Any]:
     """
     Get all indexed files from the OpenSearch instance.
 
@@ -147,7 +153,7 @@ def get_all_indexed_files_opensearch(index_name) -> Dict[Any, Any]:
     return response.get("aggregations").get("ids").get("buckets")
 
 
-def list_docs_by_id(unique_ids: List[str]):
+def list_docs_by_id(unique_ids: List[str]) -> Dict[str, Any]:
     os_client = get_opensearch_connection(OS_HOST, OS_PORT)
     should_queries = [{"term": {"unique_id": uid}} for uid in unique_ids]
     query_body = {
