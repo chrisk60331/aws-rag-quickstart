@@ -119,7 +119,6 @@ def test_llm_is_local(is_local):
         },
     ):
         actual = Embeddings()
-        print(actual)
         actual.embed_query("foo")
         ChatLLM()
 
@@ -288,7 +287,6 @@ def test_os_similarity_search_invalid_json(mocker):
             "unique_ids": ["document.pdf"],
         }
     }
-    mocker.patch("builtins.print")
     with patch("os.environ", {"BEDROCK_ENDPOINT": "https://foo"}), patch(
         "boto3.session"
     ), mock.patch("src.AgentLambda.get_opensearch_connection"), mock.patch(
