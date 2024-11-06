@@ -48,10 +48,10 @@ terraform_fmt
 pre-commit install
 pre-commit run --all-files
 ```
-### Local Functional Testing Steps --needs correction for Local deployment
+### Local Functional Testing Steps
 1. Run:
 ```bash
-for i in local-stack-setup ecsopensearch; do \
+for i in local-stack-setup ollamallm ecsopensearch; do \
   docker build -q --target $i -t $i":latest" .; done && \
   docker-compose up -d --quiet-pull && \
   while (wget -q --spider localhost/docs||false); do break;done && \
@@ -73,7 +73,7 @@ app_name=aws-rag
 for i in bedrock opensearch ecsopensearch; do \
     aws ecr create-repository --region $region --repository-name $app_name/$i --profile nmd_nonprod; done
 ```
-## Docker Build -
+## Docker Build
 ```bash
 app_name=aws-rag
 account_id=12345678900
