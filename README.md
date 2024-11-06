@@ -51,7 +51,7 @@ pre-commit run --all-files
 ### Local Functional Testing Steps
 1. Run:
 ```bash
-for i in local-stack-setup ecsopensearch; do \
+for i in local-stack-setup ollamallm ecsopensearch; do \
   docker build -q --target $i -t $i":latest" .; done && \
   docker-compose up -d --quiet-pull && \
   while (wget -q --spider localhost/docs||false); do break;done && \
