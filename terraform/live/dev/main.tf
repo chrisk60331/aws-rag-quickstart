@@ -1,10 +1,21 @@
 terraform {
-  required_version = "~> 1"
   required_providers {
+    docker = {
+      source  = "kreuzwerker/docker"
+      version = "3.0.2"
+    }
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5"
+      version = "5.6.2"
     }
+  }
+  backend "s3" {
+    bucket         = "tf-state"
+    key            = "terraform.tfstate"
+    region         = "us-west-2"
+    dynamodb_table = "tf-state-lock-table"
+    encrypt        = true
+    profile        = "saml"
   }
 }
 
@@ -19,6 +30,16 @@ provider "aws" {
   }
 }
 
+provider "docker" {
+  registry_auth {
+    address  = data.aws_ecr_authorization_token.token.proxy_endpoint
+    username = data.aws_ecr_authorization_token.token.user_name
+    password = data.aws_ecr_authorization_token.token.password
+  }
+}
+
+data "aws_ecr_authorization_token" "token" {}
+
 locals {
   app_name           = "${var.product_name}-${var.env_suffix}"
   opensearch_index   = "opensearch-index-${local.app_name}"
@@ -31,9 +52,41 @@ locals {
   log_level          = "WARNING"
 }
 
+module "s3" {
+  source      = "../../modules/s3"
+  bucket_name = "${var.app_name}-data-${var.env_suffix}"
+}
+
+module "ecr-opensearch" {
+  source         = "../../modules/ecr"
+  proxy_endpoint = data.aws_ecr_authorization_token.token.proxy_endpoint
+  repo_name      = "${var.app_name}/opensearch"
+  region_name    = var.region_name
+  build_context  = var.build_context
+  build_target   = "opensearch"
+}
+
+module "ecr-api" {
+  source         = "../../modules/ecr"
+  proxy_endpoint = data.aws_ecr_authorization_token.token.proxy_endpoint
+  repo_name      = "${var.app_name}/ecsopensearch"
+  region_name    = var.region_name
+  build_context  = var.build_context
+  build_target   = "ecsopensearch"
+}
+
+module "ecr-bedrock" {
+  source         = "../../modules/ecr"
+  proxy_endpoint = data.aws_ecr_authorization_token.token.proxy_endpoint
+  repo_name      = "${var.app_name}/bedrock"
+  region_name    = var.region_name
+  build_context  = var.build_context
+  build_target   = "bedrock"
+}
+
 module "lambda_bedrock" {
   source             = "../../modules/lambda"
-  image_uri          = var.bedrock_image_uri
+  image_uri          = replace(module.ecr-bedrock.image_url, "https://", "")
   app_name           = local.app_name
   env_name           = var.env_suffix
   security_group_ids = [module.vpc.main_vpc_security_group_id]
@@ -63,7 +116,7 @@ module "lambda_bedrock" {
 module "lambda_opensearch" {
   source = "../../modules/lambda"
 
-  image_uri          = var.opensearch_image_uri
+  image_uri          = replace(module.ecr-opensearch.image_url, "https://", "")
   app_name           = local.app_name
   env_name           = var.env_suffix
   security_group_ids = [module.vpc.main_vpc_security_group_id]
@@ -74,7 +127,7 @@ module "lambda_opensearch" {
     AOSS_PORT        = local.opensearch_port
     INDEX_NAME       = local.opensearch_index
     BEDROCK_ENDPOINT = "https://bedrock-runtime.${var.region_name}.amazonaws.com"
-    S3_BUCKET        = local.s3_bucket
+    S3_BUCKET        = module.s3.bucket_name
   }
   function_name = "opensearch"
   policy_actions = [
@@ -119,7 +172,7 @@ module "ecs" {
   security_group_id      = module.vpc.main_vpc_security_group_id
   subnets                = module.vpc.main_vpc_subnet_ids
   desired_instance_count = 1
-  docker_image_url       = var.ecs_opensearch_image_uri
+  docker_image_url       = module.ecr-api.image_url
   opensearch_url         = module.opensearch.opensearch_endpoint
   opensearch_index       = local.opensearch_index
   bedrock_endpoint       = "https://bedrock-runtime.${var.region_name}.amazonaws.com"

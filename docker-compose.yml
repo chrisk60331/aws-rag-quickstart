@@ -2,7 +2,9 @@ version: "3"
 services:
   ollama-serve:
     container_name: ollama-serve
-    image: ollamallm:latest
+    build:
+      context: .
+      target: ollamallm
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
     ports:
@@ -30,7 +32,9 @@ services:
     tty: true
   local-stack-setup:
     container_name: local-stack-setup
-    image: local-stack-setup
+    build:
+      context: .
+      target: local-stack-setup
     volumes:
       - ~/.aws:/root/.aws:ro
     depends_on:
@@ -44,7 +48,9 @@ services:
     tty: true
   uvicorn_app:
     container_name: uvicorn_app
-    image: ecsopensearch:latest
+    build:
+      context: .
+      target: ecsopensearch
     ports:
       - "80:80"
     healthcheck:

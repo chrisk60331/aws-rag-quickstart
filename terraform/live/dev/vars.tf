@@ -20,12 +20,8 @@ variable "creator" {
 variable "region_name" {
   type = string
 }
-variable "bedrock_image_uri" {
+variable "app_name" {
   type = string
 }
-variable "opensearch_image_uri" {
-  type = string
-}
-variable "ecs_opensearch_image_uri" {
-  type = string
+variable "build_context" {
 }

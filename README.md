@@ -66,30 +66,19 @@ for i in local-stack-setup ollamallm ecsopensearch; do \
 To check the index state  - go to the local OpenSearch dashboard - http://localhost:5601/app/home#/  - menu on the left -> Index management -> Indexes.
 
 # Deploy
-## Create ECR repos
+## Terraform Remote State
 ```bash
-region=us-west-2
-app_name=aws-rag
-for i in bedrock opensearch ecsopensearch; do \
-    aws ecr create-repository --region $region --repository-name $app_name/$i --profile nmd_nonprod; done
-```
-## Docker Build
-```bash
-app_name=aws-rag
-account_id=12345678900
-region=us-west-2
-for i in bedrock opensearch ecsopensearch; do \
-  docker build --target $i -t $i":latest" . && \
-  docker tag $i":latest" "$account_id.dkr.ecr.$region.amazonaws.com/$app_name/$i"":latest" && \
-  docker push "$account_id.dkr.ecr.$region.amazonaws.com/$app_name/$i"":latest"; done
-```
-## Terraform
-1. Run:
-```bash
-cd terraform/live/dev
+cd terraform/remote_state
 terraform init
+terraform apply
 ```
-2. terraform.tfvars values
+### Terraform Deploy
+```bash
+cd ../live/dev
+terraform init
+terraform apply --auto-approve
+```
+terraform.tfvars values
 ```bash
 account_id="aws_account_id"
 bedrock_image_uri="aws_account_id.dkr.ecr.region_name.amazonaws.com/aws-rag/bedrock:latest"
@@ -98,14 +87,5 @@ ecs_opensearch_image_uri="aws_account_id.dkr.ecr.region_name.amazonaws.com/aws-r
 region_name="us-east-1"
 customer="Test" # for tagging
 creator="cking" # for tagging
-```
-3. Plan
-```bash
-terraform plan -out out.plan
-```
-2. Review Plan.
-3. Run:
-```
-terraform apply out.plan
 ```
 
