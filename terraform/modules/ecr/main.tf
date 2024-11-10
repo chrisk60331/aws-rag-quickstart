@@ -11,6 +11,12 @@ terraform {
   }
 }
 
+data "archive_file" "build_context" {
+  type        = "zip"
+  source_dir  = "${var.build_context}/src"
+  output_path = "${var.build_context}/repo.zip"
+}
+
 resource "aws_ecr_repository" "aws_ecr_repository" {
   name = var.repo_name
 }
@@ -21,6 +27,9 @@ resource "docker_image" "docker_image" {
     context = var.build_context
     target  = var.build_target
   }
+  triggers = {
+    build_context_hash = data.archive_file.build_context.output_base64sha256
+  }
 }
 
 resource "docker_registry_image" "media-handler" {
@@ -29,5 +38,5 @@ resource "docker_registry_image" "media-handler" {
 }
 
 output "image_url" {
-  value = "${var.proxy_endpoint}/${var.repo_name}:latest"
+  value = "${replace(var.proxy_endpoint, "https://", "")}/${var.repo_name}@${docker_registry_image.media-handler.sha256_digest}"
 }

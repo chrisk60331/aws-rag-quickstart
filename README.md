@@ -66,6 +66,13 @@ for i in local-stack-setup ollamallm ecsopensearch; do \
 To check the index state  - go to the local OpenSearch dashboard - http://localhost:5601/app/home#/  - menu on the left -> Index management -> Indexes.
 
 # Deploy
+## Credentials
+we use saml2aws
+```bash
+brew install saml2aws
+saml2aws configure 
+saml2aws login 
+```
 ## Terraform Remote State
 ```bash
 cd terraform/remote_state
