@@ -75,9 +75,9 @@ COPY src ${FUNCTION_DIR}/src
 CMD [ "uvicorn", "src.fast_api_wrapper:app", "--host", "0.0.0.0", "--port", "80", "--workers", "20" ]
 
 FROM build-image as ollamallm
-RUN apt-get update -y && \
-  apt-get install --no-install-recommends -y curl=7.74.0-1.3+deb11u13  && \
-  curl -L https://ollama.com/download/ollama-linux-arm64.tgz -o ollama-linux-arm64.tgz && \
-  tar -C /usr -xzf ollama-linux-arm64.tgz && \
-  pip install --no-cache-dir "huggingface_hub[cli]==0.26.2"
+RUN apt-get update -y
+RUN apt-get install --no-install-recommends -y curl
+RUN curl -L https://ollama.com/download/ollama-linux-arm64.tgz -o ollama-linux-arm64.tgz
+RUN tar -C /usr -xzf ollama-linux-arm64.tgz
+RUN pip install --no-cache-dir "huggingface_hub[cli]==0.26.2"
 CMD ["ollama", "serve"]

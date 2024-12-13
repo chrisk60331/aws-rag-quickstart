@@ -1,5 +1,5 @@
 # AWS GenAI RAG Quick Start
-<img src="img/aws_rag.jpg" width="90%"/>
+<img src="img/aws_rag.jpg" width="50%"/>
 
 This is the PDF Q&A repo, providing functionality for:
 - Metadata augmentation
@@ -7,7 +7,7 @@ This is the PDF Q&A repo, providing functionality for:
 - Document retrieval via an LLM agent
 
 # Local Testing
-<img src="img/ragstart.jpg" width="90%"/>
+<img src="img/ragstart.jpg" width="50%"/>
 
 This repo includes local LLM, localstack for aws, opensearch, and fastapi for local, E2E, functional testing!
 ## Prerequisites
@@ -51,11 +51,7 @@ pre-commit run --all-files
 ### Local Functional Testing Steps
 1. Run:
 ```bash
-for i in local-stack-setup ollamallm ecsopensearch; do \
-  docker build -q --target $i -t $i":latest" .; done && \
-  docker-compose up -d --quiet-pull && \
-  while (wget -q --spider localhost/docs||false); do break;done && \
-  ECS_HOST_IP=localhost DELETE=0 python tests/LambdaE2E.py
+docker-compose up -d --build 
 ```
 2. Navigate to http://0.0.0.0/docs
 3. Test Each interface

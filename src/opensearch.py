@@ -50,9 +50,7 @@ def create_index_opensearch(
     :return: The response of the query.
     :param index_name: Index name.
     """
-    text = "Just a test sentence to test the embedding length"
-    embedding = embeddings.embed_query(text)
-    embedding_dim = len(embedding)
+    embedding_dim = 1536
 
     index_body = {
         "settings": {
