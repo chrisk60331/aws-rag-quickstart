@@ -35,7 +35,7 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 pip install pre-commit
 ```
-[Terraform](https://github.com/terraform-linters/tflint) is required for obvious reasons
+[Terraform](https://developer.hashicorp.com/terraform) is required for obvious reasons
 ```bash
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
