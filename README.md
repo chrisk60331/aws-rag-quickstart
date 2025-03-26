@@ -82,11 +82,13 @@ docker-compose up -d --build
 <img src="img/fastapi.png" width="30%"/>
 
 ### Index State
-To check the index state  - go to the local OpenSearch dashboard - http://localhost:5601/app/home#/  - menu on the left -> Index management -> Indexes.
+To check the index state:  
+- Navigate to the local OpenSearch dashboard http://localhost:5601/app/home#/  
+- From menu on the left, go to Index management > Indexes
 
 # Deploy
 ## Credentials
-we use saml2aws
+We use saml2aws
 ```bash
 brew install saml2aws
 saml2aws configure 
