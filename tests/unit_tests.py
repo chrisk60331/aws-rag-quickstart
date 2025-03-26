@@ -86,7 +86,11 @@ def test_agent_main(input_file):
     ), mock.patch(
         "src.IngestionLambda.get_opensearch_connection"
     ), mock.patch(
-        "os.environ", {"BEDROCK_ENDPOINT": "https://foo", "LOCAL": "1"}
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1",
+            "CHAT_MODEL": "anthropic.claude-v2"
+        }
     ), patch(
         "src.AgentLambda.list_docs_by_id",
     ) as mock_os:
@@ -98,7 +102,11 @@ def test_llm_chat():
     with mock.patch("src.LLM.ollama.pull"), mock.patch(
         "src.LLM.ChatOllama"
     ), mock.patch(
-        "os.environ", {"BEDROCK_ENDPOINT": "https://foo", "LOCAL": "1"}
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1",
+            "CHAT_MODEL": "anthropic.claude-v2"
+        }
     ):
         ChatLLM()
 
@@ -116,6 +124,7 @@ def test_llm_is_local(is_local):
         {
             "BEDROCK_ENDPOINT": "https://foo",
             "LOCAL": is_local,
+            "CHAT_MODEL": "anthropic.claude-v2"
         },
     ):
         actual = Embeddings()
@@ -146,7 +155,11 @@ def test_ingest_main(input_file, exists):
     ), mock.patch(
         "src.LLM.ChatOllama"
     ), patch(
-        "os.environ", {"BEDROCK_ENDPOINT": "https://foo", "LOCAL": "1"}
+        "os.environ", {
+            "BEDROCK_ENDPOINT": "https://foo",
+            "LOCAL": "1",
+            "CHAT_MODEL": "anthropic.claude-v2"
+        }
     ), mock.patch(
         "src.LLM.ollama.embeddings"
     ), mock.patch(
@@ -259,9 +272,9 @@ def test_os_similarity_search_success(mocker):
         "pdf_file": "document.pdf",
     }
 
-    mock_embeddings = mocker.patch("src.LLM.BedrockEmbeddings")
-    mock_embeddings_instance = mock_embeddings.return_value
-    mock_embeddings_instance.embed_query.return_value = [0.1, 0.2, 0.3]
+    # Mock the embeddings
+    mock_ollama_embeddings = mocker.patch("src.LLM.ollama.embeddings")
+    mock_ollama_embeddings.return_value = {"embedding": [0.1, 0.2, 0.3]}
 
     mock_os_client = mock.Mock()
     mock_os_client.search.return_value = {"hits": {"total": 1, "hits": []}}
@@ -270,7 +283,15 @@ def test_os_similarity_search_success(mocker):
         return_value=mock_os_client,
     )
 
-    mocker.patch.dict("os.environ", {"BEDROCK_ENDPOINT": "mocked-endpoint"})
+    mocker.patch.dict(
+        "os.environ",
+        {
+            "BEDROCK_ENDPOINT": "mocked-endpoint",
+            "CHAT_MODEL": "anthropic.claude-v2",
+            "EMBED_MODEL": "anthropic.claude-v2",
+            "LOCAL": "1"
+        }
+    )
 
     result = os_similarity_search.invoke(input_query)
 
@@ -278,6 +299,10 @@ def test_os_similarity_search_success(mocker):
     assert expected_query_dict["pdf_file"] == "document.pdf"
 
     assert result == {"hits": {"total": 1, "hits": []}}
+    mock_ollama_embeddings.assert_called_once_with(
+        model="anthropic.claude-v2",
+        prompt="find documents"
+    )
 
 
 def test_os_similarity_search_invalid_json(mocker):
@@ -371,10 +396,6 @@ def test_create_index_opensearch_success(mocker):
     embeddings = mocker.MagicMock()
     index_name = "test-index"
 
-    test_text = "Just a test sentence to test the embedding length"
-    mock_embedding = [0.1, 0.2, 0.3, 0.4, 0.5]  # Example embedding
-    embeddings.embed_query.return_value = mock_embedding
-
     expected_index_body = {
         "settings": {
             "index": {
@@ -386,7 +407,7 @@ def test_create_index_opensearch_success(mocker):
                 "unique_id": {"type": "keyword"},
                 "embedding": {
                     "type": "knn_vector",
-                    "dimension": len(mock_embedding),
+                    "dimension": 1536,  # This is hardcoded in the implementation
                     "method": {
                         "name": "hnsw",
                         "space_type": "innerproduct",
@@ -409,7 +430,6 @@ def test_create_index_opensearch_success(mocker):
         index=index_name, body=expected_index_body
     )
     assert result == mock_response
-    embeddings.embed_query.assert_called_once_with(test_text)
 
 
 def test_list_docs_by_id():
