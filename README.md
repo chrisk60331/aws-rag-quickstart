@@ -8,7 +8,6 @@ The Quick Start provides functionality for working with unstructured content, su
 - Document retrieval via an LLM agent
 
 To make your life easier, the Quick Start includes:
-
 - A local LLM for rapid prototyping
 - LocalStack for AWS services
 - OpenSearch
@@ -23,10 +22,10 @@ To make your life easier, the Quick Start includes:
 <img src="img/ragstart.jpg" width="50%"/>
 
 ## Prerequisites
-- Python and pip (but of course, you already have those installed).
+- Python and pip (of course, you already have those installed).
 - Docker and docker-compose.
   - Be sure to max out resource allocation in Docker preferences, you'll need it.
-- Homebrew (or other package manager, substitute brew [something] commands as necessary).
+- Homebrew (or your favorite package manager, substitute brew [something] commands as necessary).
 - This repo, cloned locally. Duh.
 
 ## Testing
@@ -34,17 +33,21 @@ To make your life easier, the Quick Start includes:
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install pre-commit
+```
+[Terraform](https://github.com/terraform-linters/tflint) is required for obvious reasons
+```bash
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
 ```
 [TFLint](https://github.com/terraform-linters/tflint) is required for terraform_tflint hook
 ```bash
 brew install tflint
 ```
-
 [Hadolint](https://github.com/hadolint/hadolint) is required for hadolint hook
 ```bash
 brew install hadolint
 ```
-
 ### Run unit tests
 ```bash
 PYTHONPATH=. python -m pytest tests/unit_tests.py
@@ -61,7 +64,7 @@ black -l79 src tests
 isort -l79 --profile black src tests
 pylama src tests
 tflint
-terraform_fmt
+terraform fmt
 ```
 ### Pre-commit
 ```bash
