@@ -12,6 +12,7 @@ To make your life easier, the Quick Start includes:
 - LocalStack for AWS services
 - OpenSearch
 - FastAPI for local E2E functional testing
+- CLI interface for direct command-line usage
 - Terraform configurations to deploy a production-ready stack
 **_NOTE:_** the local LLM is small and not multimodal, so it doesn't do well on image Q&A
 
@@ -91,6 +92,61 @@ docker-compose up -d --build
 To check the index state:  
 - Navigate to the local OpenSearch dashboard http://localhost:5601/app/home#/  
 - From menu on the left, go to Index management > Indexes
+
+# CLI Usage
+
+The package provides a command-line interface for interacting with the RAG system. After installation, the CLI is available as `aws-rag`.
+
+## Environment Variables
+
+The CLI automatically loads environment variables from a `.env` file in the current directory. You can also specify a custom environment file:
+
+```bash
+aws-rag --env-file /path/to/custom/.env <command>
+```
+
+## Available Commands
+
+### Ingest a Document
+```bash
+aws-rag ingest --unique-id <id> --file-path <path>
+```
+
+### Delete a Document
+```bash
+aws-rag delete --unique-id <id> --file-path <path>
+```
+
+### List Documents
+```bash
+aws-rag list-docs <unique_id1> <unique_id2> ...
+```
+
+### Ask a Question
+```bash
+aws-rag chat <unique_id1> <unique_id2> ... --question "Your question here"
+```
+
+### Generate Document Summaries
+```bash
+aws-rag summarize <unique_id1> <unique_id2> ...
+```
+
+### Bulk Document Ingestion
+```bash
+aws-rag bulk-ingest --unique-id <batch_id> <file_path1> <file_path2> ...
+```
+
+### Ingest Documents from a Manifest
+```bash
+aws-rag ingest-manifest --manifest-path <path_to_manifest.json> --unique-id <batch_id>
+```
+
+## Getting Help
+```bash
+aws-rag --help
+aws-rag <command> --help
+```
 
 # Deploy
 ## Credentials

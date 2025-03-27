@@ -9,6 +9,9 @@ packages = [{include = "aws_rag_quickstart", from = "src"}]
 [tool.poetry.dependencies]
 python = "^3.11"
 
+[tool.poetry.scripts]
+aws-rag = "aws_rag_quickstart.cli:cli"
+
 [project]
 name = "aws-rag-quickstart"
 version = "0.1.0"
@@ -26,6 +29,7 @@ dependencies = [
     "python-dotenv~=1.0.1",
     "langchain-ollama~=0.2.0",
     "ollama~=0.3.3",
+    "click>=8.1.7",
 ]
 
 [project.optional-dependencies]
