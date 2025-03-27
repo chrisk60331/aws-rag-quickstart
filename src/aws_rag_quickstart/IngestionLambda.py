@@ -10,9 +10,9 @@ from langchain.schema import HumanMessage
 from opensearchpy import OpenSearch
 from pdf2image import convert_from_bytes
 
-from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
-from src.LLM import ChatLLM, Embeddings
-from src.opensearch import (
+from aws_rag_quickstart.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
+from aws_rag_quickstart.LLM import ChatLLM, Embeddings
+from aws_rag_quickstart.opensearch import (
     create_index_opensearch,
     get_opensearch_connection,
     insert_document_opensearch,

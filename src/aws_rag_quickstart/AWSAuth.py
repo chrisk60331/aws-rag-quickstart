@@ -1,7 +1,7 @@
 import boto3
 from requests_aws4auth import AWS4Auth
 
-from src.constants import REGION_NAME
+from aws_rag_quickstart.constants import REGION_NAME
 
 
 def get_aws_auth() -> AWS4Auth:

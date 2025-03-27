@@ -13,18 +13,18 @@ with patch(
         "LOCAL": "1",
     },
 ):
-    from src.AgentLambda import main as agent_main
-    from src.AgentLambda import os_similarity_search, summarize_documents
-    from src.AWSAuth import get_aws_auth
-    from src.IngestionLambda import (
+    from aws_rag_quickstart.AgentLambda import main as agent_main
+    from aws_rag_quickstart.AgentLambda import os_similarity_search, summarize_documents
+    from aws_rag_quickstart.AWSAuth import get_aws_auth
+    from aws_rag_quickstart.IngestionLambda import (
         augment_metadata,
         create_index_opensearch,
         insert_document_opensearch,
     )
-    from src.IngestionLambda import main as ingest_main
-    from src.IngestionLambda import process_file
-    from src.LLM import ChatLLM, Embeddings
-    from src.opensearch import (
+    from aws_rag_quickstart.IngestionLambda import main as ingest_main
+    from aws_rag_quickstart.IngestionLambda import process_file
+    from aws_rag_quickstart.LLM import ChatLLM, Embeddings
+    from aws_rag_quickstart.opensearch import (
         delete_doc,
         delete_documents_opensearch,
         get_all_indexed_files_opensearch,
@@ -41,21 +41,21 @@ class MockResponse:
 
 
 def test_get_aws_auth():
-    with mock.patch("boto3.Session"), mock.patch("src.AWSAuth.AWS4Auth"):
+    with mock.patch("boto3.Session"), mock.patch("aws_rag_quickstart.AWSAuth.AWS4Auth"):
         get_aws_auth()
 
 
 @pytest.mark.parametrize("local", [1, 0])
 def test_get_open_search_connection(local):
     with mock.patch("os.environ", {"LOCAL": local}), mock.patch(
-        "src.opensearch.OpenSearch"
-    ), mock.patch("src.opensearch.get_aws_auth"):
+        "aws_rag_quickstart.opensearch.OpenSearch"
+    ), mock.patch("aws_rag_quickstart.opensearch.get_aws_auth"):
         get_opensearch_connection("foo", 999)
 
 
 def test_delete_doc():
-    with mock.patch("src.opensearch.get_opensearch_connection"), mock.patch(
-        "src.opensearch.delete_documents_opensearch"
+    with mock.patch("aws_rag_quickstart.opensearch.get_opensearch_connection"), mock.patch(
+        "aws_rag_quickstart.opensearch.delete_documents_opensearch"
     ), patch(
         "os.environ",
         {
@@ -68,23 +68,23 @@ def test_delete_doc():
 
 
 def test_get_all_indexed_files_opensearch():
-    with mock.patch("src.opensearch.get_opensearch_connection"):
+    with mock.patch("aws_rag_quickstart.opensearch.get_opensearch_connection"):
         get_all_indexed_files_opensearch("foo")
 
 
 @pytest.mark.parametrize("input_file", ["foo", "bar"])
 def test_agent_main(input_file):
-    with mock.patch("src.AgentLambda.RunnablePassthrough"), mock.patch(
-        "src.LLM.ollama.pull"
-    ), mock.patch("src.AgentLambda.StrOutputParser"), mock.patch(
-        "src.AgentLambda.os_similarity_search",
+    with mock.patch("aws_rag_quickstart.AgentLambda.RunnablePassthrough"), mock.patch(
+        "aws_rag_quickstart.LLM.ollama.pull"
+    ), mock.patch("aws_rag_quickstart.AgentLambda.StrOutputParser"), mock.patch(
+        "aws_rag_quickstart.AgentLambda.os_similarity_search",
     ), mock.patch(
-        "src.LLM.ChatOllama"
+        "aws_rag_quickstart.LLM.ChatOllama"
     ), mock.patch(
-        "src.LLM.ollama.embeddings",
+        "aws_rag_quickstart.LLM.ollama.embeddings",
         return_value=Mock(embed_query=Mock(return_value={})),
     ), mock.patch(
-        "src.IngestionLambda.get_opensearch_connection"
+        "aws_rag_quickstart.IngestionLambda.get_opensearch_connection"
     ), mock.patch(
         "os.environ", {
             "BEDROCK_ENDPOINT": "https://foo",
@@ -92,15 +92,15 @@ def test_agent_main(input_file):
             "CHAT_MODEL": "anthropic.claude-v2"
         }
     ), patch(
-        "src.AgentLambda.list_docs_by_id",
+        "aws_rag_quickstart.AgentLambda.list_docs_by_id",
     ) as mock_os:
         mock_os.return_value = {"num_pages": 9}
         agent_main({"question": "bar", "unique_ids": [input_file]})
 
 
 def test_llm_chat():
-    with mock.patch("src.LLM.ollama.pull"), mock.patch(
-        "src.LLM.ChatOllama"
+    with mock.patch("aws_rag_quickstart.LLM.ollama.pull"), mock.patch(
+        "aws_rag_quickstart.LLM.ChatOllama"
     ), mock.patch(
         "os.environ", {
             "BEDROCK_ENDPOINT": "https://foo",
@@ -113,12 +113,12 @@ def test_llm_chat():
 
 @pytest.mark.parametrize("is_local", ["1", "0"])
 def test_llm_is_local(is_local):
-    with mock.patch("src.LLM.ollama.pull"), mock.patch(
-        "src.LLM.ChatOllama"
-    ), mock.patch("src.LLM.BedrockEmbeddings"), mock.patch(
-        "src.LLM.ChatBedrock"
+    with mock.patch("aws_rag_quickstart.LLM.ollama.pull"), mock.patch(
+        "aws_rag_quickstart.LLM.ChatOllama"
+    ), mock.patch("aws_rag_quickstart.LLM.BedrockEmbeddings"), mock.patch(
+        "aws_rag_quickstart.LLM.ChatBedrock"
     ), mock.patch(
-        "src.LLM.ollama.embeddings"
+        "aws_rag_quickstart.LLM.ollama.embeddings"
     ), mock.patch(
         "os.environ",
         {
@@ -141,19 +141,19 @@ def test_is_opensearch_connected(mock_client):
 
 @pytest.mark.parametrize("input_file, exists", [("foo", 1), ("bar", 0)])
 def test_ingest_main(input_file, exists):
-    with mock.patch("src.AWSAuth.AWS4Auth"), mock.patch(
-        "src.IngestionLambda.convert_from_bytes"
+    with mock.patch("aws_rag_quickstart.AWSAuth.AWS4Auth"), mock.patch(
+        "aws_rag_quickstart.IngestionLambda.convert_from_bytes"
     ), mock.patch(
-        "src.IngestionLambda.process_file",
+        "aws_rag_quickstart.IngestionLambda.process_file",
     ), mock.patch(
-        "src.IngestionLambda.create_index_opensearch",
+        "aws_rag_quickstart.IngestionLambda.create_index_opensearch",
     ), mock.patch(
-        "src.IngestionLambda.get_opensearch_connection",
+        "aws_rag_quickstart.IngestionLambda.get_opensearch_connection",
         Mock(
             return_value=Mock(indices=Mock(exists=Mock(return_value=exists)))
         ),
     ), mock.patch(
-        "src.LLM.ChatOllama"
+        "aws_rag_quickstart.LLM.ChatOllama"
     ), patch(
         "os.environ", {
             "BEDROCK_ENDPOINT": "https://foo",
@@ -161,9 +161,9 @@ def test_ingest_main(input_file, exists):
             "CHAT_MODEL": "anthropic.claude-v2"
         }
     ), mock.patch(
-        "src.LLM.ollama.embeddings"
+        "aws_rag_quickstart.LLM.ollama.embeddings"
     ), mock.patch(
-        "src.LLM.ollama.pull"
+        "aws_rag_quickstart.LLM.ollama.pull"
     ):
         ingest_main({"question": "bar", "file_path": input_file})
 
@@ -273,13 +273,13 @@ def test_os_similarity_search_success(mocker):
     }
 
     # Mock the embeddings
-    mock_ollama_embeddings = mocker.patch("src.LLM.ollama.embeddings")
+    mock_ollama_embeddings = mocker.patch("aws_rag_quickstart.LLM.ollama.embeddings")
     mock_ollama_embeddings.return_value = {"embedding": [0.1, 0.2, 0.3]}
 
     mock_os_client = mock.Mock()
     mock_os_client.search.return_value = {"hits": {"total": 1, "hits": []}}
     mocker.patch(
-        "src.AgentLambda.get_opensearch_connection",
+        "aws_rag_quickstart.AgentLambda.get_opensearch_connection",
         return_value=mock_os_client,
     )
 
@@ -314,10 +314,10 @@ def test_os_similarity_search_invalid_json(mocker):
     }
     with patch("os.environ", {"BEDROCK_ENDPOINT": "https://foo"}), patch(
         "boto3.session"
-    ), mock.patch("src.AgentLambda.get_opensearch_connection"), mock.patch(
-        "src.LLM.BedrockEmbeddings"
+    ), mock.patch("aws_rag_quickstart.AgentLambda.get_opensearch_connection"), mock.patch(
+        "aws_rag_quickstart.LLM.BedrockEmbeddings"
     ), mock.patch(
-        "src.LLM.ChatBedrock"
+        "aws_rag_quickstart.LLM.ChatBedrock"
     ):
         result = os_similarity_search.invoke(input_query)
     assert result
@@ -352,7 +352,7 @@ def test_get_all_indexed_files_success(mocker):
 
     mock_os_client = mock.Mock()
     mocker.patch(
-        "src.opensearch.get_opensearch_connection", return_value=mock_os_client
+        "aws_rag_quickstart.opensearch.get_opensearch_connection", return_value=mock_os_client
     )
     mock_os_client.search.return_value = mock_response
     result = get_all_indexed_files_opensearch(index_name)
@@ -367,7 +367,7 @@ def test_get_all_indexed_files_malformed_response(mocker):
     mock_response = {}
     mock_os_client = mock.Mock()
     mocker.patch(
-        "src.opensearch.get_opensearch_connection", return_value=mock_os_client
+        "aws_rag_quickstart.opensearch.get_opensearch_connection", return_value=mock_os_client
     )
     mock_os_client.search.return_value = mock_response
     with pytest.raises(AttributeError):
@@ -383,7 +383,7 @@ def test_process_file_success(mocker):
     with patch("os.environ", {"S3_BUCKET": "foo"}), patch(
         "boto3.session"
     ), patch(
-        "src.IngestionLambda.convert_from_bytes",
+        "aws_rag_quickstart.IngestionLambda.convert_from_bytes",
         Mock(return_value=[Mock(), Mock()]),
     ):
         result = process_file(input_dict, Mock(), Mock(), Mock(), Mock())
@@ -435,7 +435,7 @@ def test_create_index_opensearch_success(mocker):
 def test_list_docs_by_id():
     expected = {"num_pages": 1, "docs_list": ["bar"]}
     with patch(
-        "src.opensearch.get_opensearch_connection",
+        "aws_rag_quickstart.opensearch.get_opensearch_connection",
         Mock(
             return_value=Mock(
                 search=Mock(
@@ -451,7 +451,7 @@ def test_list_docs_by_id():
 
 
 def test_summarize_documents():
-    with patch("src.opensearch.get_opensearch_connection"), patch(
+    with patch("aws_rag_quickstart.opensearch.get_opensearch_connection"), patch(
         "os.environ", {"BEDROCK_ENDPOINT": "https://foo"}
     ):
         summarize_documents({"unique_ids": ["foo"]})

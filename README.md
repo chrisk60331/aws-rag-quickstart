@@ -22,18 +22,24 @@ To make your life easier, the Quick Start includes:
 <img src="img/ragstart.jpg" width="50%"/>
 
 ## Prerequisites
-- Python and pip (of course, you already have those installed).
+- Python 3.11 or higher
 - Docker and docker-compose.
   - Be sure to max out resource allocation in Docker preferences, you'll need it.
 - Homebrew (or your favorite package manager, substitute brew [something] commands as necessary).
+- [uv](https://github.com/astral-sh/uv) for Python package management
 - This repo, cloned locally. Duh.
 
 ## Testing
 ### Install dependencies
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-pip install pre-commit
+# Install uv if you haven't already
+pip install uv
+
+# Install the package and its dependencies
+uv pip install -e .
+
+# Install development dependencies
+uv install -e ".[dev]"
 ```
 [Terraform](https://developer.hashicorp.com/terraform) is required for obvious reasons
 ```bash
@@ -50,7 +56,7 @@ brew install hadolint
 ```
 ### Run unit tests
 ```bash
-PYTHONPATH=. python -m pytest tests/unit_tests.py
+python -m pytest tests/unit_tests.py
 ```
 ### Run coverage
 ```bash

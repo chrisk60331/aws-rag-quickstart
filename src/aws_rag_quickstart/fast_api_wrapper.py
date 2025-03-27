@@ -4,9 +4,9 @@ from typing import Annotated, Any, Dict, List
 from fastapi import BackgroundTasks, Body, FastAPI, UploadFile
 from pydantic import BaseModel
 
-from src.AgentLambda import main, summarize_documents
-from src.IngestionLambda import main as vectorstore
-from src.opensearch import delete_doc, list_docs_by_id
+from aws_rag_quickstart.AgentLambda import main, summarize_documents
+from aws_rag_quickstart.IngestionLambda import main as vectorstore
+from aws_rag_quickstart.opensearch import delete_doc, list_docs_by_id
 
 app = FastAPI()
 BULK_API = "/bulk"
