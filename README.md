@@ -1,31 +1,54 @@
-# AWS GenAI RAG Quick Start
-<img src="img/aws_rag.jpg" width="50%"/>
+# New Math Data AWS GenAI RAG Quick Start
 
-This is the PDF Q&A repo, providing functionality for:
+This Quick Start will help you create an end-to-end local development environment to accelerate your AWS RAG development. 
+
+The Quick Start provides functionality for working with unstructured content, such as:
 - Metadata augmentation
-- Metadata storage via opensearch
+- Metadata storage via OpenSearch
 - Document retrieval via an LLM agent
+
+To make your life easier, the Quick Start includes:
+- A local LLM for rapid prototyping
+- LocalStack for AWS services
+- OpenSearch
+- FastAPI for local E2E functional testing
+- Terraform configurations to deploy a production-ready stack
+**_NOTE:_** the local LLM is small and not multimodal, so it doesn't do well on image Q&A
+
+# AWS RAG Architectural Pattern
+<img src="img/aws_rag.jpg" width="50%"/>
 
 # Local Testing
 <img src="img/ragstart.jpg" width="50%"/>
 
-This repo includes local LLM, localstack for aws, opensearch, and fastapi for local, E2E, functional testing!
 ## Prerequisites
-- Docker and docker-compose installed
-  - Be sure to max out resource allocation in docker preferences
-- Clone this repo locally
+- Python and pip (of course, you already have those installed).
+- Docker and docker-compose.
+  - Be sure to max out resource allocation in Docker preferences, you'll need it.
+- Homebrew (or your favorite package manager, substitute brew [something] commands as necessary).
+- This repo, cloned locally. Duh.
 
-**_NOTE:_** the local LLM is small and not multimodal, so it doesn't do well on image Q&A. 
 ## Testing
-### Dependencies
+### Install dependencies
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
+pip install pre-commit
 ```
-[TFLint](https://github.com/terraform-linters/tflint) required for terraform_tflint hook
-[Hadolint](https://github.com/hadolint/hadolint) required for hadolint hook
-
-### To run unit tests
+[Terraform](https://developer.hashicorp.com/terraform) is required for obvious reasons
+```bash
+brew tap hashicorp/tap
+brew install hashicorp/tap/terraform
+```
+[TFLint](https://github.com/terraform-linters/tflint) is required for terraform_tflint hook
+```bash
+brew install tflint
+```
+[Hadolint](https://github.com/hadolint/hadolint) is required for hadolint hook
+```bash
+brew install hadolint
+```
+### Run unit tests
 ```bash
 PYTHONPATH=. python -m pytest tests/unit_tests.py
 ```
@@ -41,7 +64,7 @@ black -l79 src tests
 isort -l79 --profile black src tests
 pylama src tests
 tflint
-terraform_fmt
+terraform fmt
 ```
 ### Pre-commit
 ```bash
@@ -59,11 +82,13 @@ docker-compose up -d --build
 <img src="img/fastapi.png" width="30%"/>
 
 ### Index State
-To check the index state  - go to the local OpenSearch dashboard - http://localhost:5601/app/home#/  - menu on the left -> Index management -> Indexes.
+To check the index state:  
+- Navigate to the local OpenSearch dashboard http://localhost:5601/app/home#/  
+- From menu on the left, go to Index management > Indexes
 
 # Deploy
 ## Credentials
-we use saml2aws
+We use saml2aws
 ```bash
 brew install saml2aws
 saml2aws configure 
