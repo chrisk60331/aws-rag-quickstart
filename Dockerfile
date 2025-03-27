@@ -9,8 +9,18 @@ WORKDIR ${FUNCTION_DIR}
 
 # Copy function code
 RUN mkdir -p ${FUNCTION_DIR}
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Install uv for package management
+RUN pip install --no-cache-dir uv
+
+# Copy project files
+COPY pyproject.toml README.md ${FUNCTION_DIR}/
+# Create directory structure and copy source files properly
+RUN mkdir -p ${FUNCTION_DIR}/src/aws_rag_quickstart
+COPY src/aws_rag_quickstart ${FUNCTION_DIR}/src/aws_rag_quickstart/
+
+# Install dependencies using uv
+RUN uv venv
+RUN uv pip install -e .
 
 FROM build-image as local-stack-setup
 
@@ -18,7 +28,7 @@ RUN apt-get update
 RUN apt-get install -y curl unzip less
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
 RUN unzip awscliv2.zip && ./aws/install
-RUN pip install awscli-local
+RUN uv pip install awscli-local
 ENV AWS_ENDPOINT_URL=http://local-stack:4566
 COPY data ${FUNCTION_DIR}/data
 CMD awslocal s3api create-bucket --bucket aoss-qa-dev-data-bucket --region us-west-1 --profile localstack \
@@ -33,12 +43,11 @@ RUN pip install awslambdaric
 
 # Copy in the built dependencies
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
-COPY src ${FUNCTION_DIR}/src
 
 # Set runtime interface client as default command for the container runtime
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
 # Pass the name of the function handler as an argument to the runtime
-CMD [ "AgentLambda.main" ]
+CMD [ "src.aws_rag_quickstart.AgentLambda.main" ]
 
 FROM build-image as opensearch
 
@@ -50,12 +59,11 @@ RUN apt-get update -y
 RUN apt-get install -y poppler-utils
 # Copy in the built dependencies
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
-COPY src ${FUNCTION_DIR}/src
 
 # Set runtime interface client as default command for the container runtime
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
 # Pass the name of the function handler as an argument to the runtime
-CMD [ "IngestionLambda.main" ]
+CMD [ "src.aws_rag_quickstart.IngestionLambda.main" ]
 
 FROM build-image as ecsopensearch
 
@@ -67,12 +75,14 @@ RUN apt-get install -y curl
 COPY --from=build-image ${FUNCTION_DIR} ${FUNCTION_DIR}
 RUN apt-get update -y
 RUN apt-get install -y poppler-utils
-RUN pip install "uvicorn[standard]" "fastapi[standard]"
+# Install uvicorn and fastapi with regular pip to ensure proper PATH configuration
+RUN uv pip install "uvicorn[standard]" "fastapi[standard]"
 
-COPY src ${FUNCTION_DIR}/src
+# Set PYTHONPATH to include the function directory
+ENV PYTHONPATH=${FUNCTION_DIR}:${PYTHONPATH}
 
 # Pass the name of the function handler as an argument to the runtime
-CMD [ "uvicorn", "src.fast_api_wrapper:app", "--host", "0.0.0.0", "--port", "80", "--workers", "20" ]
+CMD [ "uv", "run", "uvicorn", "aws_rag_quickstart.fast_api_wrapper:app", "--host", "0.0.0.0", "--port", "80", "--workers", "20" ]
 
 FROM build-image as ollamallm
 RUN apt-get update -y

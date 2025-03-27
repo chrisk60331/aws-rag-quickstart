@@ -4,8 +4,8 @@ from typing import Any, Dict, List
 
 from opensearchpy import OpenSearch, RequestsHttpConnection
 
-from src.AWSAuth import get_aws_auth
-from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
+from aws_rag_quickstart.AWSAuth import get_aws_auth
+from aws_rag_quickstart.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
 
 
 def get_opensearch_connection(os_host: str, os_port: str) -> OpenSearch:

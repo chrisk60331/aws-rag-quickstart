@@ -8,9 +8,9 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import tool
 
-from src.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
-from src.LLM import ChatLLM, Embeddings
-from src.opensearch import get_opensearch_connection, list_docs_by_id
+from aws_rag_quickstart.constants import OS_HOST, OS_INDEX_NAME, OS_PORT
+from aws_rag_quickstart.LLM import ChatLLM, Embeddings
+from aws_rag_quickstart.opensearch import get_opensearch_connection, list_docs_by_id
 
 logging.basicConfig(level=os.environ["LOG_LEVEL"])
 client_config = Config(max_pool_connections=50)
