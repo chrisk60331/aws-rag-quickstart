@@ -111,6 +111,6 @@ async def delete_manifest(
     data = json.load(file.file)
     files = [row["name"] for row in data]
     for file_id in files:
-        this = FileEvent(file_path=file_id)
+        this = FileEvent(file_path=file_id, unique_id=file.filename)
         background_tasks.add_task(delete_doc, this.model_dump())
     return {"unique_id": file.filename}
