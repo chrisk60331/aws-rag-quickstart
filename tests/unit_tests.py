@@ -1,5 +1,8 @@
 from unittest import mock
 from unittest.mock import Mock, patch
+import io
+import json
+import asyncio
 
 import pytest
 
@@ -31,6 +34,12 @@ with patch(
         get_opensearch_connection,
         is_opensearch_connected,
         list_docs_by_id,
+    )
+    from aws_rag_quickstart.fast_api_wrapper import (
+        delete_manifest,
+        FileEvent,
+        UploadFile,
+        BackgroundTasks,
     )
 
 
@@ -78,6 +87,8 @@ def test_agent_main(input_file):
         "aws_rag_quickstart.LLM.ollama.pull"
     ), mock.patch("aws_rag_quickstart.AgentLambda.StrOutputParser"), mock.patch(
         "aws_rag_quickstart.AgentLambda.os_similarity_search",
+    ), mock.patch(
+        "aws_rag_quickstart.AgentLambda.hub.pull"
     ), mock.patch(
         "aws_rag_quickstart.LLM.ChatOllama"
     ), mock.patch(
@@ -455,3 +466,19 @@ def test_summarize_documents():
         "os.environ", {"BEDROCK_ENDPOINT": "https://foo"}
     ):
         summarize_documents({"unique_ids": ["foo"]})
+
+
+def test_delete_manifest():
+    manifest = [{"name": "doc1"}, {"name": "doc2"}]
+    file_obj = io.BytesIO(json.dumps(manifest).encode())
+    upload = UploadFile(filename="manifest.json", file=file_obj)
+    tasks = BackgroundTasks()
+    with patch("aws_rag_quickstart.fast_api_wrapper.delete_doc") as mock_delete:
+        result = asyncio.run(delete_manifest(upload, tasks))
+
+    assert result == {"unique_id": "manifest.json"}
+    assert len(tasks.tasks) == 2
+    first_args = tasks.tasks[0].args[0]
+    expected = FileEvent(file_path="doc1", unique_id="manifest.json").model_dump()
+    assert first_args == expected
+    assert tasks.tasks[0].func is mock_delete
